@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AR comparison 5 - WebXR (in-browser AR)</title>
+<style>
+  body{font-family:system-ui,sans-serif;margin:0;padding:18px;background:#0d1117;color:#e6edf3}
+  p{color:#8b949e;font-size:14px;line-height:1.55}
+  model-viewer{width:100%;height:38vh;background:#161b22;border-radius:12px;margin:10px 0 22px}
+  h3{margin:14px 0 4px} #xr{font:13px monospace;color:#7ee787;white-space:pre-wrap}
+</style>
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+</head><body>
+<h2>Comparison 5 — WebXR AR (no Google viewer app)</h2>
+<p id="xr">checking WebXR…</p>
+<p>Wait for each model, then tap its AR button. The camera should open
+<b>inside Chrome</b> — move the phone to find a surface, tap to place, pinch to resize.
+Astronaut first, then brain.</p>
+
+<h3>1. Astronaut</h3>
+<model-viewer src="Astronaut.glb" alt="A 3D model of an astronaut"
+              ar ar-modes="webxr" camera-controls touch-action="pan-y"
+              shadow-intensity="1"></model-viewer>
+
+<h3>2. Our brain model</h3>
+<model-viewer src="Brain.glb" alt="Brain tumour segmentation"
+              ar ar-modes="webxr" camera-controls touch-action="pan-y"
+              shadow-intensity="1"></model-viewer>
+
+<script>
+  (async function () {
+    var el = document.getElementById("xr");
+    var out = ["secure context: " + window.isSecureContext, "navigator.xr: " + !!navigator.xr];
+    if (navigator.xr) {
+      try { out.push("immersive-ar supported: " + await navigator.xr.isSessionSupported("immersive-ar")); }
+      catch (e) { out.push("immersive-ar check threw: " + e.message); }
+    }
+    el.textContent = out.join("\n");
+  })();
+</script>
+</body></html>

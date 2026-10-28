@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AR comparison test</title>
+<style>
+  body{font-family:system-ui,sans-serif;margin:0;padding:18px;background:#0d1117;color:#e6edf3}
+  p{color:#8b949e;font-size:14px;line-height:1.55}
+  a.sv{display:block;background:#e5534b;color:#fff;border-radius:10px;padding:18px;
+       font-size:17px;text-decoration:none;margin:16px 0;text-align:center}
+  a.b{background:#1f6feb}
+</style></head><body>
+<h2>AR comparison — same phone, same server, two files</h2>
+<p>Tap <b>1</b> first (Google's own astronaut, hosted here). Then go back and tap <b>2</b> (our brain model, hosted here). Tell me which loads and which shows an error.</p>
+<a class="sv b" data-f="Astronaut.glb" href="#">1. Astronaut (known-good Google model)</a>
+<a class="sv" data-f="Brain.glb" href="#">2. Our brain model</a>
+<script>
+  var dir = location.pathname.replace(/[^/]*$/, "");
+  document.querySelectorAll("a.sv").forEach(function (a) {
+    var file = location.origin + dir + a.getAttribute("data-f");
+    a.href = "intent://arvr.google.com/scene-viewer/1.0?file=" + encodeURIComponent(file) +
+      "&mode=ar_only&resizable=true#Intent;scheme=https;" +
+      "package=com.google.android.googlequicksearchbox;" +
+      "action=android.intent.action.VIEW;" +
+      "S.browser_fallback_url=" + encodeURIComponent(location.href) + ";end;";
+  });
+</script>
+</body></html>

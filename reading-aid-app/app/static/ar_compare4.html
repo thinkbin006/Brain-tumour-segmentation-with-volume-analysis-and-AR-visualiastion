@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AR comparison 4 - ARCore-targeted launch</title>
+<style>
+  body{font-family:system-ui,sans-serif;margin:0;padding:18px;background:#0d1117;color:#e6edf3}
+  p{color:#8b949e;font-size:14px;line-height:1.55}
+  a.sv{display:block;background:#e5534b;color:#fff;border-radius:10px;padding:16px;
+       font-size:16px;text-decoration:none;margin:14px 0;text-align:center}
+  a.b{background:#1f6feb} a.c{background:#238636}
+</style></head><body>
+<h2>Comparison 4 — launch via ARCore instead of the Google app</h2>
+<p>These buttons send the model to <b>Google Play Services for AR</b>
+(package com.google.ar.core) instead of the Google app. Try them in order:
+A (astronaut, ARCore), then B (brain, ARCore). Note exactly what each does.</p>
+
+<a class="sv b" id="btnA" href="#">A. Astronaut via ARCore (ar_only)</a>
+<a class="sv" id="btnB" href="#">B. Brain via ARCore (ar_only)</a>
+<a class="sv c" id="btnC" href="#">C. Brain via ARCore (ar_preferred, v1.2)</a>
+
+<script>
+  var dir = location.pathname.replace(/[^/]*$/, "");
+  function mk(id, file, ver, mode) {
+    var fileUrl = location.origin + dir + file;
+    var q = "file=" + encodeURIComponent(fileUrl) + "&mode=" + mode + "&resizable=true";
+    document.getElementById(id).href =
+      "intent://arvr.google.com/scene-viewer/" + ver + "?" + q +
+      "#Intent;scheme=https;package=com.google.ar.core;" +
+      "action=android.intent.action.VIEW;" +
+      "S.browser_fallback_url=" + encodeURIComponent(location.href) + ";end;";
+  }
+  mk("btnA", "Astronaut.glb", "1.0", "ar_only");
+  mk("btnB", "Brain.glb", "1.0", "ar_only");
+  mk("btnC", "Brain.glb", "1.2", "ar_preferred");
+</script>
+</body></html>

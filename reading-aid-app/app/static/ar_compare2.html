@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AR comparison 2 - model-viewer buttons</title>
+<style>
+  body{font-family:system-ui,sans-serif;margin:0;padding:18px;background:#0d1117;color:#e6edf3}
+  p{color:#8b949e;font-size:14px;line-height:1.55}
+  model-viewer{width:100%;height:38vh;background:#161b22;border-radius:12px;margin:10px 0 22px}
+  h3{margin:14px 0 4px}
+</style>
+<script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+</head><body>
+<h2>Comparison 2 — Google's own AR button</h2>
+<p>Each model below has its own AR button (bottom-right corner of the model, the
+square/AR icon). Tap the astronaut's AR button first. Go back, then tap the brain's.</p>
+
+<h3>1. Astronaut (Google's model, hosted on this server)</h3>
+<model-viewer src="Astronaut.glb" alt="Astronaut" AR ar-modes="scene-viewer"
+              camera-controls auto-rotate></model-viewer>
+
+<h3>2. Our brain model (hosted on this server)</h3>
+<model-viewer src="Brain.glb" alt="Brain tumour segmentation" AR ar-modes="scene-viewer"
+              camera-controls auto-rotate></model-viewer>
+</body></html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glioma reading aid — workstation</title>
+<link rel="stylesheet" href="static/css/app.css">
+<script src="static/vendor/plotly.min.js"></script>
+<script src="static/js/png.js"></script>
+<script src="static/js/payload.js"></script>
+<script src="static/js/planes.js"></script>
+<script src="static/js/view3d.js"></script>
+<script src="static/js/curves.js"></script>
+<script src="static/js/app.js"></script>
+</head>
+<body>
+<header id="topbar">
+  <div class="brand">
+    <span class="logo">◉</span>
+    <div>
+      <h1>glioma reading aid</h1>
+      <div class="sub">workstation · renders N3 payloads only · <span id="appTag"></span></div>
+    </div>
+  </div>
+  <div class="headchips">
+    <span class="chip" id="caseChip">no case</span>
+    <span class="chip" id="dataChip">—</span>
+    <span class="chip" id="certRead"></span>
+    <span class="chip" id="admissChip" style="display:none"></span>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div class="headbtns">
+    <button id="mapBtn" class="btn" title="which payload sections this app consumes">payload map</button>
+    <button id="niiBtn" class="btn" disabled>.nii export —</button>
+  </div>
+</header>
+
+<main id="grid">
+  <!-- ============ 1 · worklist ============ -->
+  <aside id="rail">
+    <h2>worklist</h2>
+    <div id="worklist"></div>
+    <div class="railfoot hint">
+      install cases with<br><code>python3 code/install_app_study.py report_&lt;pid&gt;.json</code>
+    </div>
+  </aside>
+
+  <!-- ============ 2 · controls (always visible) ============ -->
+  <aside id="ctl">
+    <div class="panel">
+      <h3>plane overlays</h3>
+      <span class="legendbar">
+        <i class="sw" style="background:#3ddc84"></i>reference
+        <i class="sw" style="background:#f0883e"></i>AI@λ* frozen
+        <i class="sw" style="background:#ffa94d"></i>AI@λ live
+        <i class="sw" style="background:#4dabf7"></i>delivered
+        <i class="sw" style="background:#f85149"></i>extra
+        <i class="sw" style="background:#1f6feb"></i>missed
+        <i class="sw dither"></i>unsure
+      </span>
+      <div class="toggles col">
+        <button id="tGt" class="tgl on" title="reference composite (N3 green)">ref</button>
+        <button id="tPred" class="tgl on" title="frozen AI outline at λ* (N3 orange composite)">AI@λ*</button>
+        <button id="tLive" class="tgl on" title="live AI outline re-thresholded at the slider λ (coarse; L)">AI@λ</button>
+        <button id="tPost" class="tgl on" title="delivered frozen mask (N3 blue composite)">post</button>
+        <button id="tErr" class="tgl" title="difference vs truth: red=extra, blue=missed (E)">err</button>
+        <button id="tUnc" class="tgl" title="review the unsure voxels at λ (U)">unsure</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>calibration α β</h3>
+      <div class="ctlrow sliders">
+        <label>α <input type="range" id="alphaSlider" min="0.01" max="0.5" step="0.01" value="0.1"> </label>
+        <label>β <input type="range" id="betaSlider" min="0.01" max="0.5" step="0.01" value="0.2"> </label>
+        <button id="resetOp" class="btn small">certified point</button>
+      </div>
+      <div class="ctlrow"><b id="lamRead">λ* —</b>
+        <span class="hint" id="alphaRead"></span><span class="hint" id="betaRead"></span></div>
+      <div class="hint" id="liveNote"></div>
+    </div>
+
+    <div class="panel">
+      <h3>window / level</h3>
+      <div class="ctlrow sliders">
+        <label>W <input type="range" id="winSlider" min="0.4" max="3" step="0.05" value="1"> </label>
+        <label>L <input type="range" id="lvlSlider" min="0.4" max="2" step="0.05" value="1"> </label>
+        <button id="resetWL" class="btn small">reset W/L</button>
+      </div>
+      <div class="hint wl-note">W/L touches the scan only — never the masks</div>
+    </div>
+
+    <div class="panel">
+      <h3>3D layers</h3>
+      <div class="checks">
+        <label><input type="checkbox" id="cShell" checked> head shell <span class="hint">(rebuilt from full-res silhouettes)</span></label>
+        <label><input type="checkbox" id="cCut" checked> cutaway <span class="hint">(open tumour shells toward camera)</span></label>
+        <label><input type="checkbox" id="cGt" checked> reference gt_wt/tc/et</label>
+        <label><input type="checkbox" id="cPost" checked> delivered post_wt/tc/et</label>
+        <label><input type="checkbox" id="cPred"> AI pred_wt/tc/et <span class="hint">(≡ post surface here)</span></label>
+        <label><input type="checkbox" id="cN3"> N3 brain mesh <span class="hint">(patchy intensity iso — comparison)</span></label>
+      </div>
+      <div class="hint">the AI@λ live surface follows the <b>AI@λ</b> toggle + α slider</div>
+      <button id="zenBtn" class="btn small" title="hide the slice column so the 3D viewer gets the whole stage">⛶ focus 3D</button>
+    </div>
+  </aside>
+
+  <!-- ============ 3 · slices + numbers (scrolls internally) ============ -->
+  <section id="planes">
+    <div class="panel big">
+      <div class="panelhead"><h3>axial <span class="hint" id="zRead"></span></h3>
+        <span class="bgsel" id="bgSel"></span>
+        <input type="range" id="zSlider" min="0" max="0" value="0"></div>
+      <canvas id="view" width="256" height="256"></canvas>
+      <div class="probe" id="probeAxial">cursor · move over the image — reference vs AI-at-λ vs delivered vs unsure band</div>
+    </div>
+    <div class="duo">
+      <div class="panel">
+        <div class="panelhead"><h3>coronal <span class="hint" id="cyRead"></span></h3>
+          <input type="range" id="cySlider" min="0" max="0" value="0"></div>
+        <canvas id="cor" width="256" height="256"></canvas>
+        <div class="probe" id="probeCor">cursor · …</div>
+      </div>
+      <div class="panel">
+        <div class="panelhead"><h3>sagittal <span class="hint" id="cxRead"></span></h3>
+          <input type="range" id="cxSlider" min="0" max="0" value="0"></div>
+        <canvas id="sag" width="256" height="256"></canvas>
+        <div class="probe" id="probeSag">cursor · …</div>
+      </div>
+    </div>
+
+    <div class="panel" id="aiReview"></div>
+    <div class="panel">
+      <h3>findings · meta.ai</h3>
+      <div id="findings"></div>
+    </div>
+    <div class="panel">
+      <h3>certificate &amp; notes · meta</h3>
+      <div id="certNote"></div>
+    </div>
+    <div class="panel">
+      <h3>operating curves · curves</h3>
+      <div id="curves"></div>
+    </div>
+    <div class="panel">
+      <h3>volume vs λ · vol_curve</h3>
+      <div id="volcurve"></div>
+    </div>
+    <div class="panel">
+      <h3>coverage · certified (α,β) grid <span class="hint">(row follows the sliders)</span></h3>
+      <div id="coverage"></div>
+    </div>
+    <div class="panel">
+      <h3>cohort figure · cohort_png</h3>
+      <div id="cohortFig"></div>
+    </div>
+    <div class="panel">
+      <h3>cohort contact sheet · contact</h3>
+      <div id="contact"></div>
+    </div>
+  </section>
+
+  <!-- ============ 4 · 3D stage (always visible, fills the column) ============ -->
+  <section id="side">
+    <div class="panel panel3d">
+      <div class="panelhead">
+        <h3>3D · head + tumour onion <span class="hint">(visual aid — every number is full-resolution)</span></h3>
+        <button id="zenBtn2" class="btn small" title="toggle focus mode">⛶</button>
+      </div>
+      <div id="vol"></div>
+      <div class="hint" id="glNote"></div>
+    </div>
+  </section>
+</main>
+
+<footer id="statusbar">
+  <span id="status">booting…</span>
+  <span class="hint">keys: ←/→ slice · U unsure · E err · G ref · L live &nbsp;·&nbsp; hover any plane for the voxel probe &nbsp;·&nbsp; drag the 3D to orbit</span>
+</footer>
+
+<aside id="drawer">
+  <div class="drawerhead">
+    <h2>payload map <span class="hint">what this app takes from N3</span></h2>
+    <button id="drawerClose" class="btn small">close</button>
+  </div>
+  <div id="mapBody" class="drawerbody"></div>
+</aside>
+</body>
+</html>
