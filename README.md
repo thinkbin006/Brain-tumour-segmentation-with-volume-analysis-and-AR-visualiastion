@@ -111,7 +111,7 @@ python app/server.py --port 8000
 cloudflared tunnel --url http://localhost:8000
 ```
 
-Open the printed `https://<words>.trycloudflare.com/AR/<pid>` in Chrome on the phone. The address changes on every tunnel restart. Full details: [`AR_System_Doc.md`](AR_System_Doc.md).
+Open the printed `https://<words>.trycloudflare.com/AR/<pid>` in Chrome on the phone. The address changes on every tunnel restart.
 
 > There is no authentication: anyone holding the tunnel URL can open the app. Treat the link as the only access control and keep the server on a local machine.
 
